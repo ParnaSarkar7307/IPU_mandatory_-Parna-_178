@@ -1,0 +1,80 @@
+Here is the solution:
+#include <iostream>
+#include <cstring>
+#include <cctype>       // for tolower(), toupper()
+
+using namespace std;
+
+class MyString {
+    char    *str;
+    public:
+    MyString() {
+        str = new char[1];
+        str[0] = '\0';          // create empty string 
+    }
+    MyString(const char* s) {
+        str = new char[strlen(s)+1];
+        strcpy(str, s);
+    }
+    MyString(const MyString& from) {
+        str = new char[strlen(from.str)+1];
+        strcpy(str, from.str);
+    }
+    ~MyString() {delete[] str;}
+    MyString operator+(const MyString& op2) const {
+        int len = strlen(str) + strlen(op2.str) + 1;
+        char*    new_str = new char[len];
+        strcpy(new_str, str);
+        strcat(new_str, op2.str);
+        MyString    temp(new_str);      // constructor is called which allocates its own memory
+        delete[] new_str;
+        return temp;
+    }
+    MyString& operator=(const MyString& right) { // e.g. s1 = s2 => s1.operator=(s2) => s1 is updated with values of s2
+        if (this != &right) {                    // e.g. s1 = s1, do nothing, return itself
+            delete[] str;
+            str = new char[strlen(right.str)+1];
+            strcpy(str, right.str);
+        }
+        return *this;           // returns modified s1 as return type is &. 
+                                // Without & in return type, returns modified copy of itself.
+    }
+    bool operator<=(const MyString& right) const {    // e.g. if (s1 <= s2)
+        return strcmp(str, right.str) <= 0;
+    }
+    const char* getstring() const {return str;}   // Idea 1. const fn here means str (only data member of object)
+                                            // can't be reassigned but I can do str[0] = 'X';
+                                            // but what str points to can still be changed inside this const fn
+                                            // Idea 2. putting const in return type => caller function can't
+                                            // modify data it points to (ie. private data here)
+    void show() const {cout << str << endl;}
+    int length() const {return strlen(str);}
+    void toLower() {
+        for (int i=0; str[i] != '\0'; i++)
+            str[i] = tolower(str[i]);
+    }
+    void toUpper() {
+        for (int i=0; str[i] != '\0'; i++)
+            str[i] = toupper(str[i]);
+    }
+};
+int main() {
+    MyString s1;
+    MyString s2("Hello");
+    MyString s3(" World!");
+    MyString s4 = s2 + s3;      // As s4 object doesn't exist prior to this statement, s4 is being created
+                                // so it translates into MyString s4(tempreturnobj_from_+_op_fn)
+                                // If it were MyString s4; s4 = s2 + s3; then 2nd stmt invokes assignment operator
+
+    s4.show();
+    s4 = s3 + s2;
+    s4.show();
+    if (s2 <= s3)
+        cout << s2.getstring() << endl;
+    else
+        cout << s3.getstring() << endl;
+    s2.toLower();
+    s2.show();
+    s2.toUpper();
+    s2.show();
+}
